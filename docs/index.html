@@ -1,22 +1,93 @@
 <!DOCTYPE html>
 <html>
-<title>Angular CRUD App</title>
-
+<head>
+<meta charset="utf-8">
+<title>SDA – Technologie Frontendowe</title>
+</head>
+<body>
 <xmp theme="united" style="display:none;">
-  # Markdown text goes in here
+# Angular CRUD App
 
-  ## Chapter 1
+## Część I
 
-  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
-  et dolore magna aliqua.
+### Wymagania wstępne
 
-  ## Chapter 2
++ Podstawowa znajomość JavaScriptu oraz [TypeScriptu](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
++ Wersja LTS [Node.js](https://nodejs.org/en/download/)
++ Menadżer pakietów [npm](https://docs.npmjs.com)
++ Edytor [Visual Studio Code](https://code.visualstudio.com)
++ [Angular CLI](https://cli.angular.io) do uruchomienia projektu
++ Konsola wiersza poleceń *(np. CMD lub PowerShell)*
 
-  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-  aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-  cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-  culpa qui officia deserunt mollit anim id est laborum.
+### Instalacja Node.js i NPM
+
+1. Pobierz instalator w wersji LTS z oficjalnej strony [Node.js](https://nodejs.org/en/download/).
+1. Postępuj zgodnie z instrukcjami wyświetlanymi w instalatorze.
+1. Uruchom ponownie komputer.
+
+### Weryfikacja instalacji
+
+Czas sprawdzić, czy mamy poprawnie zainstalowane Node.js i NPM. W tym celu wykonaj kilka poleceń w konsoli wiersza poleceń, aby zobaczyć, jaka
+wersja każdego z nich jest zainstalowana.
+
+1. Sprawdź wersję Node.js:
+```bash
+node -v
+```
+
+1. Sprawdź wersję npm:
+```bash
+npm -v
+```
+
+## Część II
+
+### Instalacja Angular CLI
+
+Angular Command Line Interface (CLI) to narzędzie, które pomaga w tworzeniu szkieletów i budowaniu Angularowych aplikacji. Przyspiesza również żmudne zadania, takie jak tworzenie plików różnego typu.
+
+Aby zainstalować Angular CLI, w oknie konsoli wykonaj następujące polecenie:
+
+```bash
+npm install -g @angular/cli
+```
+
+### Weryfikacja instalacji
+
+Wykonaj następujące polecenie w wierszu poleceń:
+
+```bash
+ng version
+```
+
+Polecenie powinno zwrócić aktualną wersję Angular CLI i Typescriptu.
+
+### Stworzenie angularowej aplikacji
+
+Skoro wszystko jest gotowe, jesteśmy gotowi do stworzenia naszej pierwszej aplikacji przy użyciu Angulara. Otwórz wiersz poleceń i wykonaj następującą komendę:
+
+```bash
+ng new my-app
+```
+
+Polecenie `ng new`wyświetla monit o podanie informacji o funkcjach, które należy uwzględnić w początkowej aplikacji. Zaakceptuj wartości domyślne, wciskając klawisz `Enter`.
+
+Przejdź do nowo stworzonego katalogu z aplikacją:
+
+```bash
+cd my-app
+```
+
+Uruchom wbudowany serwer, który obserwuje zmiany w plikach i buduje aplikację:
+
+```bash
+ng serve --open
+```
+Opcja `--open` automatycznie otwiera kartę w przeglądarce na http://localhost:4200/.
+
+Jeśli instalacja i konfiguracja zakończyła się sukcesem, powinna ukazać się strona podobna do [tej](img/app-works.png).
+
 </xmp>
-
 <script src="strapdown/strapdown.js"></script>
+</body>
 </html>
