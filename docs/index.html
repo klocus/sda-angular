@@ -74,14 +74,14 @@ Polecenie powinno zwrócić aktualną wersję Angular CLI i Typescriptu.
 
 ### Stworzenie angularowej aplikacji
 
-1. Skoro wszystko jest gotowe, jesteśmy gotowi do stworzenia naszej pierwszej aplikacji przy użyciu Angulara. Otwórz wiersz poleceń i wykonaj następującą komendę:
+Skoro wszystko jest gotowe, jesteśmy gotowi do stworzenia naszej pierwszej aplikacji przy użyciu Angulara. Otwórz wiersz poleceń i wykonaj następującą komendę:
 ```bash
 ng new my-app
 ```
 
-1. Polecenie `ng new` wyświetli monit o podanie informacji o funkcjach, które należy uwzględnić w początkowej aplikacji. Zaakceptuj wartości domyślne poprzez `Enter`.
+Polecenie `ng new` wyświetli monit o podanie informacji o funkcjach, które należy uwzględnić w początkowej aplikacji. Zaakceptuj wartości domyślne poprzez `Enter`.
 
-  Komenda ta zrobi za nas kilka rzeczy:
+Komenda ta zrobi za nas kilka rzeczy:
 
   + Zainicjuje repozytorium `git`.
   + Utworzy plik `package.json` ze wszystkimi zależnościami Angulara.
@@ -89,17 +89,19 @@ ng new my-app
   + Utworzy folder `src` z początkowym kodem.
   + Wykona `npm install`, aby pobrać wszystkie pakiety do `node_modules`.
 
-1. Przejdź do nowo stworzonego katalogu z aplikacją:
+Całkiej fajnie, co? Pamiętaj, że dobry programista, to leniwy programista. Ok, teraz przejdź do nowo stworzonego katalogu z aplikacją:
+
 ```bash
 cd my-app
 ```
-1. Uruchom wbudowany serwer, który obserwuje zmiany w plikach i buduje aplikację:
+Uruchom wbudowany serwer, który obserwuje zmiany w plikach i buduje aplikację:
+
 ```bash
 ng serve --open
 ```
 Opcja `--open` automatycznie otwiera kartę w przeglądarce na http://localhost:4200/.
 
-1. Jeśli instalacja i konfiguracja zakończyła się sukcesem, powinna ukazać się strona podobna do [tej](img/app-works.png).
+Jeśli instalacja i konfiguracja zakończyła się sukcesem, powinna ukazać się strona podobna do [tej](img/app-works.png).
 
 ## Część III
 
@@ -130,7 +132,67 @@ AppComponent wygląda trochę podobnie do modułu aplikacji, ale zamiast `@NgMod
 + **templateUrl:** ścieżka do pliku szablonu HTML. `<app-root>` zostanie zastąpione tym, co masz w szablonie.
 + **styleUrls:** ścieżka do pliku CSS. Arkusz styli wpłynie wyłącznie na ten komponent, czyli nie przeniknie do innych części aplikacji.
 
-W klasie `AppComponent` można zdefiniować zmienne *(np. `title`)*, które są używane w szablonach *(np. w `App.component.html`)*.
+W klasie `AppComponent` można zdefiniować zmienne *(np. `title`)*, które są używane w szablonach.
+
+Usuńmy kod znajdujący się w `app.component.html` i zastąpmy całą zawartość następującym kodem:
+
+```html
+<header>
+  <h1>
+    {{ title }}
+  </h1>
+</header>
+
+<main></main>
+
+<footer>
+  Copyright &copy; 2020 by SDA.
+</footer>
+```
+
+## Część IV
+
+### Tworzenie nowego komponentu
+
+Utwórzmy nowy komponent do wyświetlania listy studentów. Możemy szybko go wygenerować przy pomocy Angular CLI wpisując:
+
+```bash
+ng generate component students
+```
+
+To polecenie utworzy nowy folder z czterema plikami:
+
+```bash
+CREATE src/app/students/students.component.css (0 bytes)
+CREATE src/app/students/students.component.html (23 bytes)
+CREATE src/app/students/students.component.spec.ts (642 bytes)
+CREATE src/app/students/students.component.ts (283 bytes)
+```
+CLI doda również wygenerowany komponent *Students* do `AppModule`:
+
+```bash
+UPDATE src/app/app.module.ts (404 bytes)
+```
+
+Śmiało sprawdź każdy z tych plików. Będą wyglądać podobnie do wcześniej poznanych składników aplikacji. Zwróć jednak uwagę na metodę `ngOnInit()` wewnątrz pliku `students.components.ts`. Jest to jeden z kilku punktów *zaczepienia* cyklu życia. Angular wywołuję tę metodę zaraz po uruchomieniu komponentu. To dobre miejsce na wprowadzenie logiki inicjalizacji.
+
+Dodajmy nasz nowy komponent do głównego komponentu aplikacji. Przejdź do `src/app/app.component.html` i wprowadź pomiędzy znacznik `<main>`:
+
+```html
+<app-students></app-students>
+```
+
+Jeśli masz uruchomiony proces `ng serve`, powinien on automatycznie zaktualizować stronę i wyświetlić *"students works!".*
+
+### Szablon komponentu *Students*
+
+Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie kodu HTML, który będzie prezentował naszą listę studentów. Przejdź do pliku `src/app/students/students.component.html` i wklej ten kod HTML:
+
+```html
+<section>
+  <p>lalala</p>
+</section>
+```
 
 </xmp>
 <script src="strapdown/strapdown.js"></script>

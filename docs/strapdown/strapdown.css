@@ -96,7 +96,3 @@ li.L3,
 li.L5,
 li.L7,
 li.L9 { background: #eee }
-
-ol > li {
-  padding: 0 0 .5rem 0;
-}
