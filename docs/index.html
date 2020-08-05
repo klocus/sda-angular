@@ -10,6 +10,16 @@
 
 ## Część I
 
+### Założenia aplikacji
+
+Projekt zakłada zbudowanie aplikacji służącej do zarządzania studentami Software Development Academy.
+
++ Wyświetlanie listy studentów
++ Edycja studentów
++ Dodawanie nowego studenta
++ Usuwanie studentów
++ Komunikacja poprzez API
+
 ### Wymagania wstępne
 
 + Podstawowa znajomość JavaScriptu oraz [TypeScriptu](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
@@ -64,28 +74,63 @@ Polecenie powinno zwrócić aktualną wersję Angular CLI i Typescriptu.
 
 ### Stworzenie angularowej aplikacji
 
-Skoro wszystko jest gotowe, jesteśmy gotowi do stworzenia naszej pierwszej aplikacji przy użyciu Angulara. Otwórz wiersz poleceń i wykonaj następującą komendę:
-
+1. Skoro wszystko jest gotowe, jesteśmy gotowi do stworzenia naszej pierwszej aplikacji przy użyciu Angulara. Otwórz wiersz poleceń i wykonaj następującą komendę:
 ```bash
 ng new my-app
 ```
 
-Polecenie `ng new`wyświetla monit o podanie informacji o funkcjach, które należy uwzględnić w początkowej aplikacji. Zaakceptuj wartości domyślne, wciskając klawisz `Enter`.
+1. Polecenie `ng new` wyświetli monit o podanie informacji o funkcjach, które należy uwzględnić w początkowej aplikacji. Zaakceptuj wartości domyślne poprzez `Enter`.
 
-Przejdź do nowo stworzonego katalogu z aplikacją:
+  Komenda ta zrobi za nas kilka rzeczy:
 
+  + Zainicjuje repozytorium `git`.
+  + Utworzy plik `package.json` ze wszystkimi zależnościami Angulara.
+  + Skonfiguruje TypeScript, Webpack, Testy.
+  + Utworzy folder `src` z początkowym kodem.
+  + Wykona `npm install`, aby pobrać wszystkie pakiety do `node_modules`.
+
+1. Przejdź do nowo stworzonego katalogu z aplikacją:
 ```bash
 cd my-app
 ```
-
-Uruchom wbudowany serwer, który obserwuje zmiany w plikach i buduje aplikację:
-
+1. Uruchom wbudowany serwer, który obserwuje zmiany w plikach i buduje aplikację:
 ```bash
 ng serve --open
 ```
 Opcja `--open` automatycznie otwiera kartę w przeglądarce na http://localhost:4200/.
 
-Jeśli instalacja i konfiguracja zakończyła się sukcesem, powinna ukazać się strona podobna do [tej](img/app-works.png).
+1. Jeśli instalacja i konfiguracja zakończyła się sukcesem, powinna ukazać się strona podobna do [tej](img/app-works.png).
+
+## Część III
+
+### src/index.html
+
+Budujemy SPA *(ang. Single Page Application)*, więc wszystko zostanie załadowane do pliku `src/index.html`. Otwórz go i przyjrzyj się mu. Jak zapewne widzisz, to dość standardowy kod HTML, z wyjątkiem dwóch elementów specyficznych dla naszej aplikacji:
+
++ `<base href="/">` – znacznik potrzebny do prawidłowego działania routingu.
++ `<app-root></app-root>` – główny komponent Angulara.
+
+### src/app
+ 
+Katalog `app` zawiera części używane do zmontowania całej aplikacji. W tym katalogu można znaleźć moduły aplikacji, komponenty i routing.
+
+#### app.module.ts
+
+Będziemy często używać tego pliku. Najważniejszą częścią są metadane wewnątrz dekoratora `@NgModule`. Tam zawarte są deklaracje, importy, provider'y i bootstrap.
+
++ **declarations:** komponenty, dyrektywy i pipe'y.
++ **imports:** routingi i moduły.
++ **bootstrap:** lista komponentów, które chcemy załadować podczas uruchamiania aplikacji. W naszym przypadku jest to `AppComponent`.
+
+#### app.component.ts
+
+AppComponent wygląda trochę podobnie do modułu aplikacji, ale zamiast `@NgModule` mamy dekorator `@Component`. Ponownie najważniejszą częścią jest wartość tych atrybutów *(metadanych)*.
+
++ **selector:** nazwa komponentu. Pamiętasz `<app-root>` w pliku `index.html`? To właśnie tutaj jest to zdefiniowane.
++ **templateUrl:** ścieżka do pliku szablonu HTML. `<app-root>` zostanie zastąpione tym, co masz w szablonie.
++ **styleUrls:** ścieżka do pliku CSS. Arkusz styli wpłynie wyłącznie na ten komponent, czyli nie przeniknie do innych części aplikacji.
+
+W klasie `AppComponent` można zdefiniować zmienne *(np. `title`)*, które są używane w szablonach *(np. w `App.component.html`)*.
 
 </xmp>
 <script src="strapdown/strapdown.js"></script>
