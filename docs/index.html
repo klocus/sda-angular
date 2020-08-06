@@ -137,15 +137,17 @@ W klasie `AppComponent` można zdefiniować zmienne *(np. `title`)*, które są 
 Usuńmy kod znajdujący się w `app.component.html` i zastąpmy całą zawartość następującym kodem:
 
 ```html
-<header>
+<header class="container">
   <h1>
     {{ title }}
   </h1>
 </header>
 
-<main></main>
+<main class="container">
 
-<footer>
+</main>
+
+<footer class="container">
   Copyright &copy; 2020 by SDA.
 </footer>
 ```
@@ -190,9 +192,129 @@ Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie k
 
 ```html
 <section>
-  <p>lalala</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Imię i nazwisko</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Jan Kowalski</td>
+        <td>
+          <a href="#" class="button green">Edycja</a>
+          <button class="button red">Usuń</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 ```
+
+### Stylizacja aplikacji
+
+Takie elementy jak tabele i przyciski z widoku komponentu *Students* mogą się powtarzać wielokrotnie w całej aplikacji. Z tego względu nie ma sensu stylować tych elementów wyłącznie w pliku CSS związanym z konkretnym komponentem. Zdecydowanie lepszą opcją jest użycie globalnego arukusza styli dostępnego w pliku `src/styles.css`. To właśnie w tym pliku powinny znaleźć się wszelkie uniwersalne selektory i ich właściwości, np. te dotyczące tła, fontu itd. Otwórz ten plik i wprowadź odpowiednie zmiany dla tła, tabeli oraz przycisków z wyróżnieniem na kolor czerwony i zielony (klasa *button-red* oraz *button-green*).
+
+Przykładowa zawartość `src/styles.css`:
+
+```css
+/* Ustalenie właściwości "box-sizing" dla wszystkich elementów */
+* {
+  box-sizing: border-box;
+}
+
+/* Właściwości dla body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+}
+
+/* Klasa kontenera, która ma ograniczoną szerokość i wyśrodkowuje content */
+/* Ustawienie lewego i prawego marginesu na "auto" wyśrodkowuje kontener */
+.container {
+  margin: auto 20px;
+  width: 100%;
+}
+
+/* Tabele */
+table {
+  width: 100%;
+}
+table th,
+table td {
+  padding: 8px;
+  text-align: left;
+}
+/* Cieniujemy co drugi (parzysty) wiersz tabeli */
+/* Używamy tbody, aby upewnić się, że nie cieniujemy nagłówka - to zachowuje kolejność cieniowania */
+table tbody > tr:nth-child(odd) {
+  background: #dddddd;
+}
+
+/* Przyciski */
+.button {
+  display: inline-block;
+  margin: 2px 0;
+  padding: 12px 30px 14px;
+  border: 0;
+  background: #999999;
+  border-radius: 6px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+/* Przycisk po najechaniu kursorem */
+.button:hover {
+  background: #888888;
+}
+/* Przycisk w stanie aktywnym */
+.button:active,
+.button:focus {
+  background: #777777;
+}
+
+/* Przycisk w kolorze zielonym */
+.button-green {
+  background: #33cc55;
+}
+.button-green:hover {
+  background: #22bb44;
+}
+.button-green:active,
+.button-green:focus {
+  background: #22aa44;
+}
+
+/* Przycisk w kolorze czerwonym */
+.button-red {
+  background: #dd3333;
+}
+.button-red:hover {
+  background: #cc2222;
+}
+.button-red:active,
+.button-red:focus {
+  background: #bb2222;
+}
+
+/* Media Query dla urządzeń o minimalnej szerokości 992px */
+/* czyli dla komputerów stacjonarnych */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+```
+
+Zwróć uwagę na właściwość `box-sizing: border-box`, która jest ustawiona dla wszystkich elementów HTML. Właściwość ta sprawia, że tworzenie układów CSS jest łatwiejsze i bardziej intuicyjne, a to przez to, ponieważ zapewnia, że marginesy wewnętrzne i obramowanie nie zwiększają szerokości i wysokości elementów.
+
+Na końcu przykładowego pliku CSS została również użyta reguła `Media Query`, która służy do wczytywania styli w zależności od rodzaju urządzenia czy dostępnej szerokości okna przeglądarki. Dzięki temu możemy dopasować stronę do wielkości urządzenia użytkownika. Więcej o tej regule znadziesz [tutaj](https://developer.mozilla.org/pl/docs/Web/CSS/Media_Queries/Using_media_queries).
+
+## Część V
+
+### Utworzenie sevice'u
 
 </xmp>
 <script src="strapdown/strapdown.js"></script>
