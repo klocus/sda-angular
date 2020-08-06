@@ -196,15 +196,17 @@ Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie k
     <thead>
       <tr>
         <th>Imię i nazwisko</th>
+        <th>Adres e-mail</th>
         <th>Akcje</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>Jan Kowalski</td>
+        <td><a href="mailto:jan@kowalski.pl">jan@kowalski.pl</a></td>
         <td>
-          <a href="#" class="button green">Edycja</a>
-          <button class="button red">Usuń</button>
+          <a href="#" class="button button-green">Edycja</a>
+          <button class="button button-red">Usuń</button>
         </td>
       </tr>
     </tbody>
@@ -314,8 +316,190 @@ Na końcu przykładowego pliku CSS została również użyta reguła `Media Quer
 
 ## Część V
 
+### Model pojedynczego studenta
+
+Przed zbudowaniem CRUD-owego serwisu zdefiniujmy interfejs pojedynczego studenta do pracy z danymi. Utwórz nowy plik `student.ts` wewnątrz folderu `src/app` i dodaj do niego następujący kod:
+
+```js
+export interface Student {
+  id: number;
+  name: string;
+  email: string;
+}
+```
+
 ### Utworzenie sevice'u
 
+Zacznijmy od stworzenia serwisu zawierającego wstępną listę studentów, którymi chcemy zarządzać. Serwis przyda nam się do manipulowania danymi. Komponenty nie powinny pobierać ani zapisywać danych bezpośrednio, lecz powinny skupiać się na prezentacji danych i regulować dostęp do nich wśród różnych klas. Utwórzmy zatem serwis za pomocą interfejsu wiersza polecenia, wpisując:
+
+```bash
+ng generate service student
+```
+
+Polecenie wygeneruje szkielet klasy *StudentService* w `src/app/student.service.ts` w następujący sposób:
+
+```js
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class StudentService {
+
+  constructor() { }
+
+}
+```
+
+### Funkcjonalność CRUD
+
+Aby uruchomić funkcjonalność *Create-Read-Update-Delete*, będziemy musieli zmodyfikować trzy pliki:
+
++ `src/app/student.service.ts`
++ `src/app/students/students.component.ts`
++ `src/app/students/students.component.html`
+
+#### Włączenie mechanizmu HTTP
+
+Aby móc się komunikować ze zdalnymi serwerami przez protokół `HTTP` potrzebujemy angularowego mechanizmu o nazwie `HttpClient`. Sprawmy, by był on dostępny w każdym miejscu aplikacji w dwóch krokach. Po pierwsze, dodaj go do głównego modułu `src/app/app.module.ts` importując go na samej górze pliku:
+
+```js
+import { HttpClientModule } from '@angular/common/http';
+```
+
+Następnie, wciąż jeszcze w tym samym pliku, dodaj `HttpClient` do tablicy `imports`:
+
+```js
+imports: [
+  BrowserModule,
+  HttpClientModule
+],
+```
+
+#### Przygotowanie service'u do CRUD-a
+
+Zmodyfikujmy serwis `student.service.ts`, aby móc zarządzać listą studentów. Do generowania samej listy
+wykorzystamy platformę [JSONPlaceholder](https://jsonplaceholder.typicode.com), która oferuje różnego rodzaju *udawane*
+REST API.
+
+Dodajmy mechanizmy `HttpClient` oraz `HttpHeaders` *(służy do konfiguracji nagłówka dla żądania HTTP)* importując je w
+pliku z serwisem:
+
+```js
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+```
+
+W związku z tym, iż będziemy się łączyć ze zdalnym serwerem, *StudentService* musi czekać na odpowiedź serwera, a zatem metody CRUD, które wkrótce zdefiniujemy, muszą się wykonywać asynchronicznie *(funkcje asynchroniczne nie blokują dalszego wykonywania się kodu)*. Należy zatem zaimportować klasę `Observable`, która jest kluczowym składnikiem biblioteki [RxJS](https://rxjs-dev.firebaseapp.com).
+
+```js
+import { Observable } from 'rxjs';
+```
+
+Zaimportujmy również wcześniej stworzony interfejs `Student`:
+
+```js
+import { Student } from './student';
+```
+
+Będąc nadal w *StudentService*, wstrzyknij `HttpClient` do konstruktora w prywatnej właściwości o nazwie `http`:
+
+```js
+constructor(private http: HttpClient) { }
+```
+
+Zdefiniujmy teraz *(przed konstruktorem)* prywatną zmienną `studentsUrl` z adresem do zasobu użytkowników:
+
+```js
+private studentsUrl = 'https://jsonplaceholder.typicode.com/users';
+```
+
+#### READ: Odczytanie danych studentów
+
+Aby odczytać dane z API, musimy użyć metody `http.get()` pochodzącej z klasy `HttpClient` wewnątrz stworzonego przez nas serwisu. Metoda ta zwróci nam obiekt w postaci `Observable<Student[]>`, który wypisze tablicę studentów pozyskanych podczas żądania HTTP.
+
+```js
+getStudents(): Observable<Student[]> {
+  return this.http.get<Student[]>(this.studentsUrl);
+}
+```
+
+Interfejs API danych z serwera określa kształt danych JSON, które otrzyma nasza aplikacja. Natomiast nasz interfejs API danych zwraca dane studentów jako
+tablicę.
+
+Może się też tak zdarzyć, że nie będziemy chcieli pobierać listy wszystkich studentów, a jedynie konkretnego studenta o danym numerze ID. Dodajmy zatem kolejną metodę, która to umożliwi:
+
+```js
+getStudent(id: number): Observable<Student> {
+  const url = `${this.studentsUrl}/${id}`;
+  return this.http.get<Student>(url);
+}
+```
+
+Zwróć uwagę na trzy istotne różnice w stosunku do metody `getStudents()`:
+
++ `getStudent()` tworzy adres URL żądania z identyfikatorem żądanego studenta.
++ Serwer powinien odpowiedzieć jednym studentem, a nie szeregiem studentów.
++ `getStudent()` zwraca `Observable <Hero>` *(obserwowalny obiekt "Student")* zamiast obserwowalnej tablicy studentów.
+
+#### UPDATE: Aktualizacja danych studenta
+
+Ogólna struktura metody `updateStudent()` jest podobna do struktury `getHeroes()`, ale używa ona `http.put()` do utrwalenia zmian danego studenta na serwerze. Jako, że w tym projekcie korzystamy z *udawanego* REST API, to zmiany te nie zostaną zapisane. 
+
+Najpierw dodajmy pod zmienną `studentsUrl` nowy obiekt, tj. `httpOptions`. Interfejs API sieci web czekuje specjalnego nagłówka w żądaniach aktualizacji danych.
+
+```js
+httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+};
+```
+
+Teraz możemy przystąpić do utworzenia nowej metody:
+<!---->
+<!-- Dlaczego ANY? -->
+<!---->
+```js
+updateStudent(student: Student): Observable<any> {
+  return this.http.put(this.studentsUrl, student, this.httpOptions);
+}
+```
+
+Metoda `HttpClient.put()` przyjmuje trzy parametry:
+
++ Adres URL
++ dane do aktualizacji (w tym przypadku edytowany student)
++ Opcje wysyłanego żądania
+
+#### CREATE: Tworzenie nowego studenta
+
+Tak jak w przypadku aktualizacji, nie utworzymy na serwerze *JSONPlaceholder* nowego użytkownika, ale zasymulujemy to zdarzenie.
+
+```js
+addStudent(student: Student): Observable<Student> {
+  return this.http.post<Student>(this.studentsUrl, student, this.httpOptions);
+}
+```
+
+Metoda `addStudent()` różni się od `updateStudent()` na dwa sposoby:
+
++ Wywołuje `HttpClient.post()` zamiast `put()`.
++ Oczekuje, że serwer wygeneruje `id` dla nowego studenta, którego zwróci jako `Observable<Student>`.
+
+#### DELETE: Usuwanie studenta
+
+```js
+deleteStudent(student: Student): Observable<Student> {
+  const url = `${this.studentsUrl}/${student.id}`;
+  return this.http.delete<Student>(url, this.httpOptions);
+}
+```
+
+Zwróć uwagę na następujące rzeczy:
+
++ Metoda wywołuje `HttpClient.delete()`.
++ Adres URL to adres URL z identyfikatorem studenta do usunięcia.
++ Nie są wysyłane żadne dane, tak jak w przypadku `put()` i `post()`.
+
+## Część VI
 </xmp>
 <script src="strapdown/strapdown.js"></script>
 </body>
