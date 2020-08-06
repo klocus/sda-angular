@@ -89,7 +89,7 @@ Komenda ta zrobi za nas kilka rzeczy:
   + Utworzy folder `src` z początkowym kodem.
   + Wykona `npm install`, aby pobrać wszystkie pakiety do `node_modules`.
 
-Całkiej fajnie, co? Pamiętaj, że dobry programista, to leniwy programista. Ok, teraz przejdź do nowo stworzonego katalogu z aplikacją:
+Całkiem fajnie, co? Pamiętaj, że dobry programista, to leniwy programista. Ok, teraz przejdź do nowo stworzonego katalogu z aplikacją:
 
 ```bash
 cd my-app
@@ -195,6 +195,7 @@ Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie k
   <table>
     <thead>
       <tr>
+        <th>#</th>
         <th>Imię i nazwisko</th>
         <th>Adres e-mail</th>
         <th>Akcje</th>
@@ -202,10 +203,11 @@ Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie k
     </thead>
     <tbody>
       <tr>
+        <td>1</td>
         <td>Jan Kowalski</td>
         <td><a href="mailto:jan@kowalski.pl">jan@kowalski.pl</a></td>
         <td>
-          <a href="#" class="button button-green">Edycja</a>
+          <a href="#" class="button button-green">Edytuj</a>
           <button class="button button-red">Usuń</button>
         </td>
       </tr>
@@ -216,7 +218,7 @@ Samo *"students works!"* nie jest zbyt użyteczne. Zmieńmy to poprzez dodanie k
 
 ### Stylizacja aplikacji
 
-Takie elementy jak tabele i przyciski z widoku komponentu *Students* mogą się powtarzać wielokrotnie w całej aplikacji. Z tego względu nie ma sensu stylować tych elementów wyłącznie w pliku CSS związanym z konkretnym komponentem. Zdecydowanie lepszą opcją jest użycie globalnego arukusza styli dostępnego w pliku `src/styles.css`. To właśnie w tym pliku powinny znaleźć się wszelkie uniwersalne selektory i ich właściwości, np. te dotyczące tła, fontu itd. Otwórz ten plik i wprowadź odpowiednie zmiany dla tła, tabeli oraz przycisków z wyróżnieniem na kolor czerwony i zielony (klasa *button-red* oraz *button-green*).
+Takie elementy jak tabele i przyciski z widoku komponentu *Students* mogą się powtarzać wielokrotnie w całej aplikacji. Z tego względu nie ma sensu stylować tych elementów wyłącznie w pliku CSS związanym z konkretnym komponentem. Zdecydowanie lepszą opcją jest użycie globalnego arkusza styli dostępnego w pliku `src/styles.css`. To właśnie w tym pliku powinny znaleźć się wszelkie uniwersalne selektory i ich właściwości, np. te dotyczące tła, fontu itd. Otwórz ten plik i wprowadź odpowiednie zmiany dla tła, tabeli oraz przycisków z wyróżnieniem na kolor czerwony i zielony (klasa *button-red* oraz *button-green*).
 
 Przykładowa zawartość `src/styles.css`:
 
@@ -312,7 +314,7 @@ table tbody > tr:nth-child(odd) {
 
 Zwróć uwagę na właściwość `box-sizing: border-box`, która jest ustawiona dla wszystkich elementów HTML. Właściwość ta sprawia, że tworzenie układów CSS jest łatwiejsze i bardziej intuicyjne, a to przez to, ponieważ zapewnia, że marginesy wewnętrzne i obramowanie nie zwiększają szerokości i wysokości elementów.
 
-Na końcu przykładowego pliku CSS została również użyta reguła `Media Query`, która służy do wczytywania styli w zależności od rodzaju urządzenia czy dostępnej szerokości okna przeglądarki. Dzięki temu możemy dopasować stronę do wielkości urządzenia użytkownika. Więcej o tej regule znadziesz [tutaj](https://developer.mozilla.org/pl/docs/Web/CSS/Media_Queries/Using_media_queries).
+Na końcu przykładowego pliku CSS została również użyta reguła `Media Query`, która służy do wczytywania styli w zależności od rodzaju urządzenia czy dostępnej szerokości okna przeglądarki. Dzięki temu możemy dopasować stronę do wielkości urządzenia użytkownika. Więcej o tej regule znajdziesz [tutaj](https://developer.mozilla.org/pl/docs/Web/CSS/Media_Queries/Using_media_queries).
 
 ## Część V
 
@@ -445,7 +447,7 @@ Zwróć uwagę na trzy istotne różnice w stosunku do metody `getStudents()`:
 
 Ogólna struktura metody `updateStudent()` jest podobna do struktury `getHeroes()`, ale używa ona `http.put()` do utrwalenia zmian danego studenta na serwerze. Jako, że w tym projekcie korzystamy z *udawanego* REST API, to zmiany te nie zostaną zapisane. 
 
-Najpierw dodajmy pod zmienną `studentsUrl` nowy obiekt, tj. `httpOptions`. Interfejs API sieci web czekuje specjalnego nagłówka w żądaniach aktualizacji danych.
+Najpierw dodajmy pod zmienną `studentsUrl` nowy obiekt, tj. `httpOptions`. Interfejs API sieci web oczekuje specjalnego nagłówka w żądaniach aktualizacji danych.
 
 ```js
 httpOptions = {
@@ -500,6 +502,79 @@ Zwróć uwagę na następujące rzeczy:
 + Nie są wysyłane żadne dane, tak jak w przypadku `put()` i `post()`.
 
 ## Część VI
+
+### Wyświetlenie listy studentów
+
+#### Modyfikacja `students.component.ts`
+
+Stworzyliśmy odpowiednie metody w naszym serwisie, ale póki co, nigdzie z nich nie korzystamy. Czas to zmienić. Otwórz `src/app/students/students.component.ts` i go nieco zmodyfikuj wg poniższych wskazówek.
+
+Zacznijmy od zaimportowania modelu studenta oraz serwisu `StudentService`:
+
+```js
+import { Student } from '../student';
+import { StudentService } from '../student.service';
+```
+
+Zaraz przed konstruktorem zdefiniujmy zmienną `students` o tablicowym typie `Student`:
+
+```js
+students: Student[];
+```
+
+Wstrzyknijmy następnie zaimportowany serwis do konstruktora:
+
+```js
+constructor(private studentService: StudentService) { }
+```
+
+Teraz wypadałoby stworzyć metodę, która przy pomocy serwisu zaciągnie dane studentów do tablicy `students`:
+
+```js
+getStudents(): void {
+  this.studentService.getStudents()
+    .subscribe(students => this.students = students);
+}
+```
+
+Pozostało ją wywołać wewnątrz punktu zaczepienia *(ang. hook)* cyklu życia `ngOnInit()`:
+
+```js
+ngOnInit(): void {
+  this.getStudents();
+}
+```
+
+Chociaż można by wywołać ją w konstruktorze, to nie jest to najlepsza praktyka. Konstruktor nie powinien się tym zajmować, a tym bardziej wywoływać funkcji, która wykonuje żądania HTTP do zdalnego serwera. Zarezerwuj go dla prostej inicjalizacji.
+
+#### Modyfikacja `students.component.html`
+
+Zmieńmy szablon komponentu, abyśmy mogli renderować dane z serwisu. Przejdź do `src/app/students/students.component.html` i zmodyfikuj zawartość znacznika `<tbody>` w taki sposób, by zastąpić wartości statyczne przez dynamiczne:
+
+```html
+<tbody>
+  <tr *ngFor="let student of students">
+    <td>{{student.id}}</td>
+    <td>{{student.name}}</td>
+    <td>
+      <a href="mailto:{{student.email}}">{{student.email}}</a>
+    </td>
+    <td>
+      <a href="#" class="button button-green">Edytuj</a>
+      <button class="button button-red">Usuń</button>
+    </td>
+  </tr>
+</tbody>
+```
+
+A teraz przyjrzyjmy się temu, co właśnie zrobiliśmy. Jak zapewne się domyślasz, dodaliśmy nowe wiązanie danych *(ang. data-binding)* do szablonu:
+
++ `*ngFor`: wykorzystujemy pętlę `for...of` do iteracji tablicy obiektów `students`, którą zdefiniowaliśmy w komponencie. W tym przypadku powtórzy ona zawartość znacznika wiersza tabeli `<tr>` tyle razy ile studentów zwrócił serwis.
++ `{{student.id}}`: wyświetlamy pojedyczne właściwości danego obiektu poprzez interpolację *(ang. string interpolation)*.
+
+### Usuwanie studenta
+
+
 </xmp>
 <script src="strapdown/strapdown.js"></script>
 </body>
