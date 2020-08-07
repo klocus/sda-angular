@@ -338,7 +338,7 @@ Zacznijmy od stworzenia serwisu zawierającego wstępną listę studentów, któ
 ng generate service student
 ```
 
-Polecenie wygeneruje szkielet klasy *StudentService* w `src/app/student.service.ts` w następujący sposób:
+Polecenie wygeneruje szkielet klasy `StudentService` w `src/app/student.service.ts` w następujący sposób:
 
 ```js
 import { Injectable } from '@angular/core';
@@ -391,7 +391,7 @@ pliku z serwisem:
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 ```
 
-W związku z tym, iż będziemy się łączyć ze zdalnym serwerem, *StudentService* musi czekać na odpowiedź serwera, a zatem metody CRUD, które wkrótce zdefiniujemy, muszą się wykonywać asynchronicznie *(funkcje asynchroniczne nie blokują dalszego wykonywania się kodu)*. Należy zatem zaimportować klasę `Observable`, która jest kluczowym składnikiem biblioteki [RxJS](https://rxjs-dev.firebaseapp.com).
+W związku z tym, iż będziemy się łączyć ze zdalnym serwerem, `StudentService` musi czekać na odpowiedź serwera, a zatem metody CRUD, które wkrótce zdefiniujemy, muszą się wykonywać asynchronicznie *(funkcje asynchroniczne nie blokują dalszego wykonywania się kodu)*. Należy zatem zaimportować klasę `Observable`, która jest kluczowym składnikiem biblioteki [RxJS](https://rxjs-dev.firebaseapp.com).
 
 ```js
 import { Observable } from 'rxjs';
@@ -403,7 +403,7 @@ Zaimportujmy również wcześniej stworzony interfejs `Student`:
 import { Student } from './student';
 ```
 
-Będąc nadal w *StudentService*, wstrzyknij `HttpClient` do konstruktora w prywatnej właściwości o nazwie `http`:
+Będąc nadal w `StudentService`, wstrzyknij `HttpClient` do konstruktora w prywatnej właściwości o nazwie `http`:
 
 ```js
 constructor(private http: HttpClient) { }
@@ -461,7 +461,8 @@ Teraz możemy przystąpić do utworzenia nowej metody:
 <!---->
 ```js
 updateStudent(student: Student): Observable<any> {
-  return this.http.put(this.studentsUrl, student, this.httpOptions);
+  const url = `${this.studentsUrl}/${student.id}`;
+  return this.http.put(url, student, this.httpOptions);
 }
 ```
 
@@ -574,6 +575,295 @@ A teraz przyjrzyjmy się temu, co właśnie zrobiliśmy. Jak zapewne się domyś
 
 ### Usuwanie studenta
 
+#### Modyfikacja `students.component.ts`
+
+Dodaj metodę `delete()` do klasy komponentu:
+
+```js
+delete(student: Student): void {
+  this.students = this.students.filter(s => s !== student);
+  this.studentService.deleteStudent(student).subscribe();
+}
+```
+
+Pomimo, że komponent deleguje usuwanie studentów do `StudentService`, pozostaje odpowiedzialny za aktualizowanie własnej listy studentów `students`. Metoda `delete()` natychmiast usuwa studenta do z tablicy komponentu, przewidując, że StudentService odniesie sukces na serwerze.
+
+#### Modyfikacja `students.component.html`
+
+Przy każdym studencie na liście studentów znajduje się przycisk usuwania, lecz nie wykonuje on żadnej akcji. Dodajmy zatem do niego *event binding*:
+
+```html
+<button class="button button-red" (click)="delete(student)">Usuń</button>
+```
+
+## Część VII
+
+### Nawigacja z routingiem
+
+Aby móc edytować poszczególnych studentów lub dodawać nowych, należałoby utworzyć osobne "podstrony", gdzie przy pomocy odpowiedniego formularza można byłoby to zrobić. Do realizacji tego celu wykorzystamy *routing*, czyli możliwość tworzenia adresów z różnymi widokami.
+
+W Angularze dobrą praktyką jest ładowanie i konfigurowanie routera w oddzielnym module najwyższego poziomu, który jest
+dedykowany do routingu i importowany przez główny moduł `AppModule`.
+
+Zgodnie z konwencją, nazwa klasy modułu to `AppRoutingModule` i należy ją utworzyć w pliku `app-routing.module.ts` wewnątrz folderu `src/app`. Wykorzystajmy CLI do wygenerowania tego modułu:
+
+```bash
+ng generate module app-routing --flat --module=app
+```
+
+Zwróć uwagę na dwie dodatkowe *flagi* polecenia:
+
++ `--flat`: umieszcza plik w `src/app` zamiast w jego własnym folderze.
++ `--module=app`: rejestruje plik w tablicy importu `AppModule`.
+
+Wygenerowany plik, tj. `src/app/app-routing.module.ts` zastąp przy pomocy następującego kodu:
+
+```js
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { StudentsComponent } from './students/students.component';
+
+const routes: Routes = [
+  { path: '', redirectTo: '/students', pathMatch: 'full' },
+  { path: 'students', component: StudentsComponent }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+```
+
+Spójrzmy na ten kod. Po pierwsze, `AppRoutingModule` importuje `RouterModule` i `Routes`, aby aplikacja mogła mieć funkcje routingu. Następny import, `StudentsComponent`, wskaże routerowi miejsce, do którego może się udać po skonfigurowaniu tras.
+
+Trasy informują router, który widok ma być wyświetlany, gdy użytkownik kliknie łącze lub wklei adres URL w pasku adresu
+przeglądarki.
+
+Typowa trasa w Angularze ma dwie właściwości:
+
++ `path`: ciąg, który odpowiada adresowi URL w pasku adresu przeglądarki.
++ `component`: komponent, który router powinien utworzyć podczas nawigowania do tej trasy.
+
+Aby aplikacja automatycznie nawigowała do listy studentów, dodaliśmy specjalną trasę, która przekierowuje "pusty" adres URL na ścieżkę `/students`. Zastosowano tutaj właściwość `pathMatch: 'full'`, która musi się pojawić podczas przekierowań tras z pustymi ścieżkami.
+
+Dalej widzimy dekorator `@NgModule`, który inicjuje router i rozpoczyna jego nasłuchiwanie w poszukiwaniu zmian lokalizacji przeglądarki. Importujemy w nim moduł `RouterModule`, który pobiera tablicę konfiguracyjną `routes`, a także ten same moduł eksportujemy, by był dostępny w całej aplikacji.
+
+### Dodanie dyrektywy routera
+
+Otwórz szablon głównego komponentu `AppComponent` i zastąp element `<app-students>` na `<router-outlet>`:
+
+```html
+<main class="container">
+  <router-outlet></router-outlet>
+</main>
+```
+
+Szablon `AppComponent` nie potrzebuje już `<app-students>`, ponieważ aplikacja będzie wyświetlać `StudentsComponent` tylko wtedy, gdy użytkownik będzie do niego nawigował.
+
+Od tej chwili to `<router-outlet>` mówi aplikacji jakie widoki *(komponenty)* mają być wyświetlane pod danym adresem.
+
+## Część VIII
+
+### Komponent edycji studenta
+
+Routing ma większy sens, gdy istnieje wiele widoków. Na razie jest tylko widok z listą studentów. Utwórzmy zatem nowy komponent, który będzie prezentował pola do edycji pojedynczego studenta. Wykonaj następujące polecenie:
+
+```bash
+ng generate component studentEdit
+```
+
+Zastąp wygenerowany kod TypeScript w pliku `student-edit.component.ts` na poniższy:
+
+```js
+import { Component, OnInit, Input } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
+
+import { Student } from '../student';
+import { StudentService } from '../student.service';
+
+@Component({
+  selector: 'app-student-edit',
+  templateUrl: './student-edit.component.html',
+  styleUrls: [ './student-edit.component.css' ]
+})
+export class StudentEditComponent implements OnInit {
+  @Input() student: Student;
+
+  constructor(
+    private route: ActivatedRoute,
+    private studentService: StudentService,
+    private location: Location
+  ) {}
+
+  ngOnInit(): void {
+    this.getStudent();
+  }
+
+  getStudent(): void {
+    // Uzyskanie wartości parametru "id" i jego konwersja na liczbę
+    const id = parseInt(this.route.snapshot.paramMap.get('id'));
+    this.studentService.getStudent(id)
+      .subscribe(student => this.student = student);
+  }
+
+  goBack(): void {
+    this.location.back();
+  }
+
+  save(): void {
+    // Zapisuje dane i przekierowuje do poprzedniego widoku
+    this.studentService.updateStudent(this.student)
+      .subscribe(() => this.goBack());
+  }
+}
+```
+
+Przyjrzyjmy się wstrzykiwanym elementom do konstruktora:
+
++ `ActivatedRoute` przechowuje informacje o trasie do tej instancji, tj. do `StudentEditComponent`. Komponent ten jest szczególnie zainteresowany parametrami trasy pobranymi z adresu URL, a my chcemy uzyskać wartość parametru `id`, który jest numerem identyfikacyjnym studenta.
++ `StudentService` pobiera dane o studencie ze zdalnego serwera.
++ `Location` jest serwisem Angulara służącym do interakcji z przeglądarką. Używamy go do powrotu do widoku, w którym się wcześniej znajdował użytkownik.
+
+Zastąp wygenerowany kod HTML nowego komponentu przez poniższy:
+
+```html
+<section *ngIf="student">
+  <h2>Edycja #{{student.id}} <i>{{student.name}}</i></h2>
+
+  <div>
+    <label for="name">Imię i nazwisko:</label>
+    <input type="text" id="name" [(ngModel)]="student.name">
+  </div>
+
+  <div>
+    <label for="email">Adres e-mail:</label>
+    <input type="email" id="email" [(ngModel)]="student.email">
+  </div>
+
+  <div>
+    <button (click)="goBack()" class="button">Anuluj</button>
+    <button (click)="save()" class="button button-green">Zapisz</button>
+  </div>
+</section>
+```
+
+Powyższy kod zawiera dziwny "atrybut" przy polach tekstowych, prawda? `[(ngModel)]` to składnia dwukierunkowego wiązania danych *(ang. two-way data-binding)* w Angularze. W tym przypadku wiąże ona m.in. właściwość `student.name` z polem tekstowym w HTML, dzięki czemu dane są wymieniane w dwóch kierunkach: z właściwości `student.name` do pola tekstowego i z pola tekstowego z powrotem do `student.name`. Dzięki temu zaraz po wprowadzeniu zmiany w polu tekstowym zauważysz zmianę w tytule nad formularzem.
+
+To jednak nie wszystko. Element `<section>` posiada warunek `*ngIf="student"`. Sprawia on, że sekcja ta pojawi się dopiero wtedy, kiedy serwis pobierze z serwera dane o studencie, czyli wtedy, kiedy obiekt `student` nie będzie pusty.
+
+### Modyfikacja głównego modułu
+
+Do poprawnego działania wiązania dwukierunkowego, które wprowadziliśmy w kodzie komponentu edycji poprzez `[(ngModel)]` w polu tekstowym, potrzebny dodatkowy moduł angularowy – `FormsModule`.
+
+Otwórz plik `src/app/app/module.ts` i zaimportuj go:
+
+```js
+import { FormsModule } from '@angular/forms';
+```
+
+Następnie dodaj go do tablicy `imports` wewnątrz dekoratora `@NgModule`:
+
+```js
+imports: [
+  BrowserModule,
+  HttpClientModule,
+  AppRoutingModule,
+  FormsModule
+],
+```
+
+### Modyfikacja routingu
+
+Aby przejść do edycji studenta, router potrzebuje odpowiedniej trasy. Zaimportujemy zatem nasz nowy komponent do `app-routing.module.ts`:
+
+```js
+import { StudentEditComponent } from './student-edit/student-edit.component';
+```
+
+Natomiast w samych ścieżkach routera dodajmy następującą:
+
+```js
+{ path: 'edit/:id', component: StudentEditComponent }
+```
+
+### Modyfikacja komponentu listy studentów
+
+Liście studentów brakuje odpowiedniego hiperłącza, by móc przejść do edycji konkretnego studenta. Zastąp kod przycisku edycji na:
+
+```html
+<a routerLink="/edit/{{student.id}}" class="button button-green">Edytuj</a>
+```
+
+Zastosowanie dyrektywy `routerLink` do elementu w szablonie powoduje, że element ten staje się łączem, które inicjuje nawigację do odpowiedniej trasy routera. Łącze to otwiera jeden lub więcej komponentów w `<router-outlet>` na stronie.
+
+## Część IX
+
+### Komponent tworzenia studenta
+
+Nasza aplikacja potrafi wykonać prawie każdą funkcję z czterech podstawowych, a mianowicie: pobieranie danych, aktualizacja danych i usuwanie wybranych elementów. Zostało nam tylko tworzenie nowych. Dodajmy odpowiednie pola pod listą wszystkich studentów. W tym celu otwórz plik `src/app/students/students.component.html` i dodaj:
+
+```html
+<div class="new-student">
+  <h2>Dodaj nowego studenta</h2>
+  <label for="name">Imię i nazwisko:</label>
+  <input type="text" id="name" #name>
+
+  <label for="email">Adres e-mail:</label>
+  <input type="email" id="email" #email>
+
+  <button (click)="add(name.value, email.value); name.value=''; email.value=''">Dodaj</button>
+</div>
+```
+
+W odpowiedzi na zdarzenie kliknięcia należy dorzucić do pliku `students.component.ts` metodę `add()`, która obsłuży dwa parametry: `name` oraz `email`. Dodatkowo po wywołaniu tej metody, czyścimy dotychczas wpisaną wartość obu pól, by można było dodać nowego studenta.
+
+Do klasy `StudentsComponent` dodaj następującą metodę: 
+
+```js
+add(name: string, email: string): void {
+  // Usunięcie białych znaków z danych
+  name = name.trim();
+  email = email.trim();
+  
+  // Zaprzestanie wykonywania, kiedy pola są puste
+  if (!name || !email) {
+    return;
+  }
+  
+  // Zaprzestanie wykonywania, kiedy adres e-mail nie zawiera "@"
+  if (email.indexOf('@') < 1) {
+    return;
+  }
+  
+  // Przesłanie danych do serwera i zaktualizowanie lokalnej tablicy
+    this.studentService.addStudent({ name, email } as Student)
+      .subscribe(student=> {
+        this.students.push(student);
+      });
+}
+```
+
+Gdy podana nazwa i email nie są puste, aplikacja tworzy niemalże kompletny obiekt studenta, któremu brakuje tylko identyfikatora i przekazuje go do metody serwisu `addStudent()`.
+
+Po pomyślnym zapisaniu, wywołanie zwrotne `subscribe()` odbiera z serwera nowego studenta i umieszcza go na liście.
+
+## Część X
+
+### Stylizacja komponentów
+
+Sama aplikacja, jak i jej komponenty nie wyglądają zbyt dobrze. To jednak zadanie wyłącznie dla Ciebie. Spraw, by poszczególne segmenty aplikacji prezentowały się lepiej wykorzystując CSS.
+
+### Wdrażanie aplikacji
+
+Możesz wygenerować wszystkie zasoby aplikacji w celu przesłania na produkcję, uruchamiając to polecenie:
+
+```bash
+ng build --prod
+```
+
+Komenda ta zminifikuje *(zmniejszy)* i połączy zasoby w celu szybszego uruchomiania aplikacji.
 
 </xmp>
 <script src="strapdown/strapdown.js"></script>
