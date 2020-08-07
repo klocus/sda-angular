@@ -689,7 +689,7 @@ import { StudentService } from '../student.service';
   styleUrls: [ './student-edit.component.css' ]
 })
 export class StudentEditComponent implements OnInit {
-  @Input() student: Student;
+  student: Student;
 
   constructor(
     private route: ActivatedRoute,
@@ -850,6 +850,18 @@ Gdy podana nazwa i email nie są puste, aplikacja tworzy niemalże kompletny obi
 Po pomyślnym zapisaniu, wywołanie zwrotne `subscribe()` odbiera z serwera nowego studenta i umieszcza go na liście.
 
 ## Część X
+
+### Obsługa nieistniejących tras 
+
+Przy użyciu CLI wygeneruj komponent `NotFound`, który będzie odpowiadał za obsługę nieistniejących tras routera, czyli takich przypadków, kiedy użytkownik poda adres w przeglądarce, którego nie obsługuje nasza aplikacja.
+
+Gdy już utworzysz komponent, zaimportuj go do pliku routera i dodaj nową trasę:
+
+```js
+{ path: '**', component: NotFoundComponent }
+```
+
+Router wybiera trasę z dwiema gwiazdkami, jeśli żądany adres URL nie pasuje do żadnej ze ścieżek znajdujących się w tablicy tras.
 
 ### Stylizacja komponentów
 

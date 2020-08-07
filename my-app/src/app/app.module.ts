@@ -7,12 +7,14 @@ import { AppComponent } from './app.component';
 import { StudentsComponent } from './students/students.component';
 import { AppRoutingModule } from './app-routing.module';
 import { StudentEditComponent } from './student-edit/student-edit.component';
+import { NotFoundComponent } from './not-found/not-found.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     StudentsComponent,
-    StudentEditComponent
+    StudentEditComponent,
+    NotFoundComponent
   ],
   imports: [
     BrowserModule,

@@ -11,7 +11,7 @@ import { StudentService } from '../student.service';
   styleUrls: ['./student-edit.component.css']
 })
 export class StudentEditComponent implements OnInit {
-  @Input() student: Student;
+  student: Student;
 
   constructor(
     private route: ActivatedRoute,
