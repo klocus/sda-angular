@@ -460,16 +460,16 @@ Teraz możemy przystąpić do utworzenia nowej metody:
 <!-- Dlaczego ANY? -->
 <!---->
 ```js
-updateStudent(student: Student): Observable<any> {
+updateStudent(student: Student): Observable<Student> {
   const url = `${this.studentsUrl}/${student.id}`;
-  return this.http.put(url, student, this.httpOptions);
+  return this.http.put<Student>(url, student, this.httpOptions);
 }
 ```
 
 Metoda `HttpClient.put()` przyjmuje trzy parametry:
 
 + Adres URL
-+ dane do aktualizacji (w tym przypadku edytowany student)
++ Dane do aktualizacji (w tym przypadku edytowany student)
 + Opcje wysyłanego żądania
 
 #### CREATE: Tworzenie nowego studenta
