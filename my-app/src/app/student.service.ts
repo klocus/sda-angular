@@ -47,6 +47,6 @@ export class StudentService {
       return of([]);
     }
 
-    return this.http.get<Student[]>(`${this.studentsUrl}?name=${term}`);
+    return this.http.get<Student[]>(`${this.studentsUrl}?name_like=${term}`);
   }
 }
