@@ -808,7 +808,7 @@ Nasza aplikacja potrafi wykonać prawie każdą funkcję z czterech podstawowych
 
 ```html
 <div class="new-student">
-  <h2>Dodaj nowego studenta</h2>
+  <h3>Dodaj nowego studenta</h3>
   <label for="name">Imię i nazwisko:</label>
   <input type="text" id="name" #name>
 
@@ -863,21 +863,194 @@ Gdy już utworzysz komponent, zaimportuj go do pliku routera i dodaj nową tras�
 { path: '**', component: NotFoundComponent }
 ```
 
-Router wybiera trasę z dwiema gwiazdkami, jeśli żądany adres URL nie pasuje do żadnej ze ścieżek znajdujących się w tablicy tras.
+W powyższym przykładzie router wybiera trasę z dwiema gwiazdkami, jeśli żądany adres URL nie pasuje do żadnej ze ścieżek
+znajdujących się w tablicy tras.
+
+Zamiast jednak ładować komponent `NotFound` przy każdej nieistniejącej trasie, wykonaj odpowiednie przekierowanie na ścieżkę `/404`, która będzie wyświetlała ten komponent.
+
+### Nowe pole studenta
+
+Zwracany plik JSON z API pod adresem http://jsonplaceholder.typicode.com/users zawiera o wiele więcej danych niż wykorzystujemy w aplikacji. Dodaj do tabeli spisu wszystkich studentów kolumnę *Nazwa użytkownika*, która będzie wyświetlała zawartość właściwości `username`. Dodaj również odpowiednie pole do komponentu edycji oraz tworzenia nowego studenta.
 
 ### Stylizacja komponentów
 
-Sama aplikacja, jak i jej komponenty nie wyglądają zbyt dobrze. To jednak zadanie wyłącznie dla Ciebie. Spraw, by poszczególne segmenty aplikacji prezentowały się lepiej wykorzystując CSS.
+Sama aplikacja, jak i jej komponenty nie wyglądają zbyt dobrze. Spraw, by poszczególne segmenty aplikacji prezentowały się lepiej wykorzystując CSS. Spróbuj również wprowadzić różne właściwości dla tego samego selektora, ale w różnych plikach komponentów, np. dla nagłówka H1. Sprawdź czy style komponentów wzajemnie na siebie wpływają i nadpisują.
 
-### Wdrażanie aplikacji
+## Część XI
 
-Możesz wygenerować wszystkie zasoby aplikacji w celu przesłania na produkcję, uruchamiając to polecenie:
+### Wyszukiwanie studentów
 
-```bash
-ng build --prod
+Przy bazie liczącej jedynie 10 studentów, znalezienie tego właściwego nie jest problemem. Kłopoty zaczynają się, kiedy liczba użytkowników mierzona jest w setkach lub tysiącach. Dodajmy zatem nad tabelką funkcję wyszukiwania studentów. Gdy użytkownik wpisze nazwę w pole wyszukiwania, będzie wykonywał żądanie HTTP dla studentów filtrowanych przez wpisaną frazę.
+
+Zacznijmy od dodania metody `searchStudents()` do serwisu `StudentService`:
+
+```js
+searchStudents(term: string): Observable<Student[]> {
+  // Jeśli brak frazy, zwróć pustą tablicę
+  if (!term.trim()) {
+    return of([]);
+  }
+
+  return this.http.get<Student[]>(`${this.studentsUrl}?name_like=${term}`);
+}
 ```
 
-Komenda ta zminifikuje *(zmniejszy)* i połączy zasoby w celu szybszego uruchomiania aplikacji.
+Metoda zwraca pustą tablicą, jeśli nie jest wyszukiwane żadne hasło. Reszta przypomina funkcję `getStudents()`. Jedyną znaczącą różnicą jest adres URL, który zawiera ciąg zapytań z wyszukiwaną frazą.
+
+### Komponent wyszukiwania
+
+Stwórz `StudentSearchComponent` za pomocą CLI:
+
+```bash
+ng generate component StudentSearch
+```
+
+Wygenerowany szablon `StudentSearchComponent` zastąp kodem, który będzie zawierał pole wyszukiwania i zwracał wyniki:
+
+```html
+<div class="search-component">
+  <h3><label for="search-box">Wyszukaj studenta</label></h3>
+
+  <input #searchBox id="search-box" (input)="search(searchBox.value)" />
+
+  <ul class="search-result">
+    <li *ngFor="let student of students$ | async" >
+      <a routerLink="/edit/{{student.id}}">
+        {{student.name}}
+      </a>
+    </li>
+  </ul>
+</div>
+```
+
+Wpisywana fraza w pole *search-box* przez użytkownika została powiązana poprzez *event binding* `(input)` z wywołaniem metody `search()`, którą dodamy do komponentu.
+
+Zauważ, że `*ngFor` iteruje listę o nazwie `students$`. Znak `$` wskazuje, iż obiekt `students$` nie jest zwykłą tablicą, lecz obserwowalną. Ponieważ `*ngFor` nie może nic zrobić z obiektem obserwowalnym, użyliśmu znaku *pipe* (`|`), a następnie słówka `async`. Dzięki temu automatycznie subskrybujemy się do `Observable`, więc nie musimy tego robić w klasie komponentów.
+
+Klasę komponentu `StudentSearch` zastąp następującym kodem:
+
+```js
+import { Component, OnInit } from '@angular/core';
+
+import { Observable, Subject } from 'rxjs';
+
+import {
+   debounceTime, distinctUntilChanged, switchMap
+} from 'rxjs/operators';
+
+import { Student } from '../student';
+import { StudentService } from '../student.service';
+
+@Component({
+  selector: 'app-student-search',
+  templateUrl: './student-search.component.html',
+  styleUrls: [ './student-search.component.css' ]
+})
+export class StudentSearchComponent implements OnInit {
+  students$: Observable<Student[]>;
+  private searchTerms = new Subject<string>();
+
+  constructor(private studentService: StudentService) {}
+
+  // Dodanie wyszukiwanej frazy do obserwowalnego strumienia
+  search(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+  ngOnInit(): void {
+    this.students$ = this.searchTerms.pipe(
+      // Odczekanie 300ms po każdym naciśnięciu klawisza przed uwzględnieniem frazy
+      debounceTime(300),
+
+      // Zignorowanie frazy, jeżeli jest ona taka sama jak poprzednia
+      distinctUntilChanged(),
+
+      // przełączenie na nowe obserwowalne wyszukiwanie za każdym razem, gdy zmieni się fraza
+      switchMap((term: string) => this.studentService.searchStudents(term)),
+    );
+  }
+}
+```
+
+Przejdźmy do analizy powyższego kodu:
+
++ Właściwość `SearchTerms` jest obiektem `RxJS Subject`. `Subject` jest zarówno źródłem obserwowalnych wartości, jak i samym obserwatorem. Można go zasubskrybować tak, jak każdy inny obserwowalny obiekt. Możliwe jest również dodanie do niego nowej wartości poprzez wywołanie jego metody `next(value)`, tak jak robi to metoda `search()`.
++ Przekazanie nowej frazy wyszukiwania bezpośrednio do `searchHeroes()` po każdym naciśnięciu klawisza użytkownika spowodowałoby powstanie nadmiernej ilości żądań HTTP, co mogłoby negatywnie wpłynąć na zasoby serwera. Zamiast tego, wewnątrz metody `ngOnInit()` przetwarzamy `searchTerms` przez sekwencję operatorów RxJS, które redukują liczbę wywołań `searchStudents()`. 
++ `debounceTime(300)` czeka 300 milisekund po każdym naciśnięciu klawisza przed przejściem do kolejnych operacji. Dzięki temu żądania nie będą wysyłane częściej niż co 300ms.
++ `distinctUntilChanged()` zapewnia, że żądanie jest wysyłane tylko w przypadku zmiany tekstu.
++ `switchMap()` wywołuje metodę wyszukiwania dla każdej wpisanej frazy, która przechodzi przez `debounce()` i `distinctUntilChanged()`. Unieważnia ona  poprzednie obserwowalne frazy, zwracając tylko najnowsze wywołanie metody `searchStudents()`. Wyniki wcześniejszych wywołań są anulowane i odrzucane.
+
+Ostatnia rzecz to dodanie kodu CSS do pliku styli komponentu *(`student-search.component.css`)*:
+
+```css
+/* Pole wyszukiwania (<input>) */
+#search-box {
+  width: 200px;
+}
+
+/* Lista wyszukiwania (<ul>) */
+.search-result {
+  margin-top: 0;
+  padding-left: 0;
+}
+
+.search-result li {
+  width: 200px;
+  height: 25px;
+  padding: 5px;
+  border: 1px solid #dddddd;
+  border-top: 0;
+  background-color: #ffffff;
+  cursor: pointer;
+  list-style-type: none;
+}
+
+.search-result li:hover {
+  background-color: #999999;
+}
+
+.search-result li:hover a {
+  color: #ffffff;
+}
+
+.search-result li a {
+  display: block;
+  color: #999999;
+  text-decoration: none;
+}
+```
+
+### Modyfikacja komponentu listy studentów
+
+Otwórz widok komponentu `StudentsComponent` i dodaj znacznik komponentu wyszukiwania `<app-student-search>` nad tabelą.
+
+```html
+<section>
+  <app-student-search></app-student-search>
+  <table>
+    ...
+  </table>
+  ...
+</section>
+```
+
+## Część XII
+
+### Wdrażanie aplikacji na GitHub
+
+Twoim zadaniem jest wdrożenie wykonanej aplikacji prosto na GitHub i uruchomienie jej w usłudze *GitHub Pages*. W tym celu zaloguj się do serwisu GitHub i utwórz nowe repozytorium dla projektu. Następnie wykonując odpowiednie polecenie w konsoli, powiąż folder projektu z nowym repo i przekaż kod.
+
+Po przesłaniu kodu na repozytorium, musisz dokonać zmiany w pliku `angular.json`, a dokładniej, to w pozycji `outputpath`. Domyślnie po uruchomieniu komendy budowania aplikacji, kod jest generowany w katalogu `/dist/<nazwa-projektu>`. Natomiast GitHub Pages obsługuje katalog `docs`, więc należy zmienić tę ścieżkę.
+
+Po tej zmianie, należy "zbudować" wszystkie zasoby aplikacji w celu przesłania na produkcję, uruchamiając to polecenie:
+
+```bash
+ng build --prod --baseHref="https://<nazwa-użytkownika>.github.io/<nazwa-repo>/"
+```
+
+Komenda ta zminifikuje *(zmniejszy)* i połączy zasoby w celu szybszego uruchomiania aplikacji. Może jednak wystąpić problem z poprawnym linkowaniem do zasobów. Aby go rozwiązać, często wykorzystuje się dodatkową falgę `--baseHref`, do której przekazujemy docelowy adres, pod którym ma znaleźć się zbudowana aplikacja.
+
+Dodaj wygenerowany kod do lokalnego repozytorium i prześlij go na GitHub. Na końcu przejdź do ustawień repozytorium i w sekcji "GitHub Pages" przy etykiecie "Source" zaznacz katalog `/docs`.
 
 </xmp>
 <script src="strapdown/strapdown.js"></script>
