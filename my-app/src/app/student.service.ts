@@ -42,10 +42,11 @@ export class StudentService {
 
   searchStudents(term: string): Observable<Student[]> {
     // Jeśli brak frazy, zwróć pustą tablicę
+    // "of" - tworzy obserwowalny strumień
     if (!term.trim()) {
       return of([]);
     }
 
-    return this.http.get<Student[]>(`${this.studentsUrl}?name_like=${term}`);
+    return this.http.get<Student[]>(`${this.studentsUrl}?name=${term}`);
   }
 }

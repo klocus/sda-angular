@@ -887,6 +887,7 @@ Zacznijmy od dodania metody `searchStudents()` do serwisu `StudentService`:
 ```js
 searchStudents(term: string): Observable<Student[]> {
   // Jeśli brak frazy, zwróć pustą tablicę
+  // "of" - tworzy obserwowalny strumień
   if (!term.trim()) {
     return of([]);
   }
@@ -965,7 +966,8 @@ export class StudentSearchComponent implements OnInit {
       // Zignorowanie frazy, jeżeli jest ona taka sama jak poprzednia
       distinctUntilChanged(),
 
-      // przełączenie na nowe obserwowalne wyszukiwanie za każdym razem, gdy zmieni się fraza
+      // Przełączenie na nowe obserwowalne wyszukiwanie za każdym razem, gdy zmieni się fraza
+      // https://jsfiddle.net/ys7Lruns/
       switchMap((term: string) => this.studentService.searchStudents(term)),
     );
   }
@@ -979,6 +981,8 @@ Przejdźmy do analizy powyższego kodu:
 + `debounceTime(300)` czeka 300 milisekund po każdym naciśnięciu klawisza przed przejściem do kolejnych operacji. Dzięki temu żądania nie będą wysyłane częściej niż co 300ms.
 + `distinctUntilChanged()` zapewnia, że żądanie jest wysyłane tylko w przypadku zmiany tekstu.
 + `switchMap()` wywołuje metodę wyszukiwania dla każdej wpisanej frazy, która przechodzi przez `debounce()` i `distinctUntilChanged()`. Unieważnia ona  poprzednie obserwowalne frazy, zwracając tylko najnowsze wywołanie metody `searchStudents()`. Wyniki wcześniejszych wywołań są anulowane i odrzucane.
+
+<!-- Max tłumaczy switchMap(): https://www.youtube.com/watch?v=6lKoLwGlglE -->
 
 Ostatnia rzecz to dodanie kodu CSS do pliku styli komponentu *(`student-search.component.css`)*:
 
